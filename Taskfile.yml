@@ -1,0 +1,38 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  BINARY_NAME: zflow
+  MAIN_PATH: ./cmd/main.go
+
+tasks:
+  default:
+    desc: 显示帮助信息
+    cmds:
+      - task --list
+
+  run:
+    desc: 运行应用程序
+    cmds:
+      - go run {{.MAIN_PATH}}
+    silent: true
+
+  build:
+    desc: 构建应用程序
+    cmds:
+      - go build -o bin/{{.BINARY_NAME}} {{.MAIN_PATH}}
+    silent: true
+
+  clean:
+    desc: 清理构建产物
+    cmds:
+      - rm -rf bin/
+    silent: true
+
+  dev:
+    desc: 开发模式运行（使用 air 热重载）
+    cmds:
+      - air -c .air.toml
+    silent: true
+
