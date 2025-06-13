@@ -1,32 +1,79 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
+
 	"zflow/internal/model"
 )
 
 type CheckMySQLOperation struct{}
 
-func (op *CheckMySQLOperation) Execute(ctx model.Context, input []byte, vars map[string]interface{}) ([]byte, error) {
-	ip := string(input)
+func (op *CheckMySQLOperation) Execute(ctx model.Context, inputs map[string][]byte, vars map[string]interface{}) (map[string][]byte, error) {
+	// 获取输入参数
+	ip, exists := inputs["ip"]
+	if !exists {
+		return nil, fmt.Errorf("未找到输入IP地址")
+	}
 
-	address := ip + ":3306"
-	conn, err := net.DialTimeout("tcp", address, 3*time.Second)
+	port, exists := inputs["port"]
+	if !exists {
+		port = []byte("3306") // 默认端口
+	}
+
+	timeout, exists := inputs["timeout"]
+	if !exists {
+		timeout = []byte("3") // 默认超时时间
+	}
+
+	// 解析超时时间
+	timeoutSec, err := strconv.Atoi(string(timeout))
 	if err != nil {
-		return []byte("未检测到 MySQL 服务"), nil
+		return nil, fmt.Errorf("无效的超时时间: %v", err)
+	}
+
+	// 构建地址
+	address := fmt.Sprintf("%s:%s", string(ip), string(port))
+	ctx.Log(fmt.Sprintf("正在检查 MySQL 服务: %s (超时: %d秒)", address, timeoutSec))
+
+	// 尝试连接
+	conn, err := net.DialTimeout("tcp", address, time.Duration(timeoutSec)*time.Second)
+	if err != nil {
+		ctx.Log(fmt.Sprintf("MySQL 服务检查失败: %v", err))
+		return map[string][]byte{
+			"status":  []byte("failed"),
+			"message": []byte("未检测到 MySQL 服务"),
+			"error":   []byte(err.Error()),
+		}, nil
 	}
 	defer conn.Close()
-	return []byte("存在 MySQL 服务"), nil
+
+	ctx.Log("MySQL 服务检查成功")
+	return map[string][]byte{
+		"status":  []byte("success"),
+		"message": []byte("存在 MySQL 服务"),
+		"address": []byte(address),
+	}, nil
 }
 
 type echoMsgOperations struct{}
 
-func (op *echoMsgOperations) Execute(ctx model.Context, input []byte, vars map[string]interface{}) ([]byte, error) {
-	return input, nil
+func (op *echoMsgOperations) Execute(ctx model.Context, inputs map[string][]byte, vars map[string]interface{}) (map[string][]byte, error) {
+	// 如果没有输入，返回空输出
+	if len(inputs) == 0 {
+		return map[string][]byte{}, nil
+	}
+
+	// 回显所有输入
+	outputs := make(map[string][]byte)
+	for name, data := range inputs {
+		ctx.Log(fmt.Sprintf("回显消息 [%s]: %s", name, string(data)))
+		outputs[name] = data
+	}
+	return outputs, nil
 }
 
 func main() {
@@ -38,11 +85,15 @@ func main() {
 		Operation: &CheckMySQLOperation{},
 		Properties: map[string][]model.Port{
 			"inputs": {
-				{Name: "in", Label: "机器IP地址", PortType: "connection"},
+				{Name: "ip", Label: "机器IP地址", PortType: "connection"},
+				{Name: "port", Label: "端口号", PortType: "connection"},
+				{Name: "timeout", Label: "超时时间(秒)", PortType: "connection"},
 			},
 			"outputs": {
-				{Name: "out", Label: "有mysql服务", PortType: "connection"},
-				{Name: "out", Label: "没有mysql服务", PortType: "connection"},
+				{Name: "status", Label: "状态", PortType: "connection"},
+				{Name: "message", Label: "消息", PortType: "connection"},
+				{Name: "error", Label: "错误信息", PortType: "connection"},
+				{Name: "address", Label: "地址", PortType: "connection"},
 			},
 		},
 	}
@@ -55,6 +106,9 @@ func main() {
 		Properties: map[string][]model.Port{
 			"inputs": {
 				{Name: "in", Label: "信息", PortType: "connection"},
+			},
+			"outputs": {
+				{Name: "out", Label: "输出", PortType: "connection"},
 			},
 		},
 	}
@@ -73,21 +127,9 @@ func main() {
 		ID: "test_workflow",
 		Dag: &model.Dag{
 			Nodes: map[string]*model.Node{
-				"node1": {
-					ID:     "node1",
-					TypeID: 1,
-					Label:  "节点1",
-				},
-				"node2": {
-					ID:     "node2",
-					TypeID: 2,
-					Label:  "节点2",
-				},
-				"node3": {
-					ID:     "node3",
-					TypeID: 2,
-					Label:  "节点3",
-				},
+				"node1": model.NewNode("node1", 1, "MySQL检查节点"),
+				"node2": model.NewNode("node2", 2, "成功回显节点"),
+				"node3": model.NewNode("node3", 2, "失败回显节点"),
 			},
 			Connections: []model.Connection{
 				{
@@ -95,7 +137,7 @@ func main() {
 					TypeID: 1,
 					From: model.Endpoint{
 						NodeID:   "node1",
-						PortName: "out",
+						PortName: "message",
 					},
 					To: model.Endpoint{
 						NodeID:   "node2",
@@ -107,7 +149,7 @@ func main() {
 					TypeID: 1,
 					From: model.Endpoint{
 						NodeID:   "node1",
-						PortName: "out",
+						PortName: "error",
 					},
 					To: model.Endpoint{
 						NodeID:   "node3",
@@ -124,6 +166,11 @@ func main() {
 			1: connType,
 		},
 	}
+
+	// 设置初始输入数据
+	wf.Dag.Nodes["node1"].Inputs["ip"] = []byte("127.0.0.1")
+	wf.Dag.Nodes["node1"].Inputs["port"] = []byte("3306")
+	wf.Dag.Nodes["node1"].Inputs["timeout"] = []byte("3")
 
 	// 4. 验证工作流
 	if err := wf.Validate(); err != nil {
@@ -145,6 +192,14 @@ func main() {
 	}
 
 	// 7. 打印工作流状态
-	wfJSON, _ := json.MarshalIndent(wf, "", "  ")
-	fmt.Printf("\n工作流状态:\n%s\n", string(wfJSON))
+	fmt.Println("\n工作流执行完成！")
+	for nodeID, node := range wf.Dag.Nodes {
+		fmt.Printf("节点 %s 状态: %s\n", nodeID, node.State)
+		if len(node.Outputs) > 0 {
+			fmt.Printf("输出数据:\n")
+			for port, data := range node.Outputs {
+				fmt.Printf("  %s: %s\n", port, string(data))
+			}
+		}
+	}
 }

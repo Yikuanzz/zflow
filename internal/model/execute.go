@@ -1,13 +1,12 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
 // Operation 与 Node 一一对应，真正执行工作。
 type Operation interface {
-	Execute(context Context, input []byte, vars map[string]interface{}) ([]byte, error)
+	Execute(context Context, inputs map[string][]byte, vars map[string]interface{}) (map[string][]byte, error)
 }
 
 // Context 是运行期给 Operation 的最少上下文
@@ -36,69 +35,88 @@ func (wf *Workflow) ExecuteWorkflow(ctx *ExecutionContext) error {
 		return fmt.Errorf("failed to sort workflow: %v", err)
 	}
 
+	ctx.Log(fmt.Sprintf("工作流执行顺序: %v", order))
+
 	// 2. 按顺序执行节点
 	for _, nodeID := range order {
 		node := wf.Dag.Nodes[nodeID]
 		nodeType := wf.NodeTypes[node.TypeID]
 
+		ctx.Log(fmt.Sprintf("开始执行节点 %s (%s)", nodeID, node.Label))
+
 		// 收集输入
-		input, err := wf.collectNodeInputs(nodeID)
+		err := wf.collectNodeInputs(nodeID)
 		if err != nil {
+			node.State = "failed"
 			return fmt.Errorf("failed to collect inputs for node %s: %v", nodeID, err)
 		}
 
 		// 执行操作
-		_, err = nodeType.Operation.Execute(ctx, input, ctx.Vars)
+		outputs, err := nodeType.Operation.Execute(ctx, node.Inputs, ctx.Vars)
 		if err != nil {
+			node.State = "failed"
 			return fmt.Errorf("node %s execution failed: %v", nodeID, err)
 		}
 
-		// 更新节点状态
+		// 存储输出
+		node.Outputs = outputs
 		node.State = "success"
+		ctx.Log(fmt.Sprintf("节点 %s 执行完成，状态: %s", nodeID, node.State))
 	}
 
 	return nil
 }
 
 // collectNodeInputs 收集节点的所有输入
-func (wf *Workflow) collectNodeInputs(nodeID string) ([]byte, error) {
+func (wf *Workflow) collectNodeInputs(nodeID string) error {
 	node := wf.Dag.Nodes[nodeID]
 	nodeType := wf.NodeTypes[node.TypeID]
 
 	// 获取输入端口列表
 	inputPorts, exists := nodeType.Properties["inputs"]
-	if !exists {
-		return nil, fmt.Errorf("node type %d has no input ports defined", node.TypeID)
+	if !exists || len(inputPorts) == 0 {
+		// 如果没有输入端口，直接返回
+		return nil
 	}
 
 	// 收集每个输入端口的数据
-	inputs := make(map[string]interface{})
 	for _, port := range inputPorts {
+		// 如果节点已经有预设的输入数据，则跳过
+		if _, exists := node.Inputs[port.Name]; exists {
+			continue
+		}
+
 		// 查找连接到该端口的连接
+		found := false
 		for _, conn := range wf.Dag.Connections {
 			if conn.To.NodeID == nodeID && conn.To.PortName == port.Name {
-				// TODO: 从源节点获取输出数据
-				// 这里需要实现从上游节点获取数据的逻辑
-				inputs[port.Name] = nil // 临时占位
+				// 从源节点获取输出数据
+				sourceNode := wf.Dag.Nodes[conn.From.NodeID]
+				if sourceNode.State == "success" {
+					if output, exists := sourceNode.Outputs[conn.From.PortName]; exists && output != nil {
+						node.Inputs[port.Name] = output
+						found = true
+						break
+					}
+				}
 			}
+		}
+		if !found {
+			return fmt.Errorf("node %s 的输入端口 %s 没有找到对应的连接或源节点未执行完成", nodeID, port.Name)
 		}
 	}
 
-	// 将输入数据序列化为 JSON
-	inputJSON, err := json.Marshal(inputs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal inputs: %v", err)
-	}
-
-	return inputJSON, nil
+	return nil
 }
 
 // EchoOperation 是一个简单的回显操作，用于测试
-type EchoOperation struct {
-	Message string
-}
+// type EchoOperation struct {
+// 	Message string
+// }
 
-func (op *EchoOperation) Execute(ctx Context, input []byte, vars map[string]interface{}) ([]byte, error) {
-	ctx.Log(fmt.Sprintf("Echo: %s", op.Message))
-	return []byte(op.Message), nil
-}
+// func (op *EchoOperation) Execute(ctx Context, inputs map[string][]byte, vars map[string]interface{}) (map[string][]byte, error) {
+// 	ctx.Log(fmt.Sprintf("Echo: %s", op.Message))
+// 	return map[string][]byte{
+// 		"out": []byte(op.Message),
+// 	}, nil
+// }

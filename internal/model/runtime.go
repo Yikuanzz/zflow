@@ -9,8 +9,23 @@ type Node struct {
 	ID     string `json:"id"`
 	TypeID int    `json:"node_type"` // 对应 NodeType.ID
 	Label  string `json:"label"`
-	// 运行期字段 ↓↓↓（最小留一个占位）
+	// 运行期字段 ↓↓↓
 	State string `json:"-"` // running / success / failed ...
+	// 存储每个端口的输入输出数据
+	Inputs  map[string][]byte `json:"-"` // 端口名 -> 输入数据
+	Outputs map[string][]byte `json:"-"` // 端口名 -> 输出数据
+}
+
+// NewNode 创建一个新的节点实例
+func NewNode(id string, typeID int, label string) *Node {
+	return &Node{
+		ID:      id,
+		TypeID:  typeID,
+		Label:   label,
+		State:   "pending",
+		Inputs:  make(map[string][]byte),
+		Outputs: make(map[string][]byte),
+	}
 }
 
 // Connection 表示有向边
