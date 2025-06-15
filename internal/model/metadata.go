@@ -15,7 +15,7 @@ type Endpoint struct {
 
 // NodeType 定义节点模板
 type NodeType struct {
-	ID         int               `json:"node_type"`
+	UID        string            `json:"node_type"`
 	Category   string            `json:"category"`
 	Note       string            `json:"note"`
 	Operation  Operation         `json:"operation"`
@@ -24,7 +24,7 @@ type NodeType struct {
 
 // ConnectionType 决定连线的语义与可连接端口类型
 type ConnectionType struct {
-	ID               int      `json:"connection_type"`
+	UID              string   `json:"connection_type"`
 	Name             string   `json:"name"`
 	Description      string   `json:"description"`
 	Color            string   `json:"color"`

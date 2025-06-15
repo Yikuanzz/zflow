@@ -36,7 +36,7 @@ func (op *CheckMySQLOperation) Execute(ctx model.Context, inputs map[string][]by
 	}
 
 	// 构建地址
-	address := fmt.Sprintf("%s:%s", string(ip), string(port))
+	address := net.JoinHostPort(string(ip), string(port))
 	ctx.Log(fmt.Sprintf("正在检查 MySQL 服务: %s (超时: %d秒)", address, timeoutSec))
 
 	// 尝试连接
@@ -79,7 +79,7 @@ func (op *echoMsgOperations) Execute(ctx model.Context, inputs map[string][]byte
 func main() {
 	// 1. 创建节点类型
 	nodeType_MySQL := model.NodeType{
-		ID:        1,
+		UID:       "1",
 		Category:  "test",
 		Note:      "检查机器是否有mysql服务",
 		Operation: &CheckMySQLOperation{},
@@ -99,7 +99,7 @@ func main() {
 	}
 
 	nodeType_Echo := model.NodeType{
-		ID:        2,
+		UID:       "2",
 		Category:  "test",
 		Note:      "回显节点",
 		Operation: &echoMsgOperations{},
@@ -115,7 +115,7 @@ func main() {
 
 	// 2. 创建连接类型
 	connType := model.ConnectionType{
-		ID:               1,
+		UID:              "1",
 		Name:             "test_conn",
 		Description:      "测试连接",
 		Color:            "#FF0000",
