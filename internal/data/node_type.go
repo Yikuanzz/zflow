@@ -1,88 +1,61 @@
 package data
 
-// import "zflow/internal/model"
+import "zflow/internal/model"
 
-// // 定义常用的节点类型
-// var (
-// 	// 基础节点类型
-// 	EchoNode = model.NodeType{
-// 		ID:       1,
-// 		Category: "basic",
-// 		Note:     "回显节点，用于测试",
-// 		Operation: &EchoOperation{
-// 			Message: "Hello from Echo Node!",
-// 		},
-// 		Properties: map[string][]model.Port{
-// 			"inputs": {
-// 				{Name: "in", Label: "输入", PortType: "connection"},
-// 			},
-// 			"outputs": {
-// 				{Name: "out", Label: "输出", PortType: "connection"},
-// 			},
-// 		},
-// 	}
+// 加法节点
+var AddNodeType = model.NodeType{
+	UID:       "builtin.add.v1",
+	Category:  "math",
+	Note:      "两个数字相加，输出结果",
+	Operation: AddOperationInst, // 这里你可以填入具体的加法 Operation 实例
+	Properties: map[string][]model.Port{
+		"inputs": {
+			{Name: "a", Label: "加数A", PortType: "connection"},
+			{Name: "b", Label: "加数B", PortType: "connection"},
+		},
+		"outputs": {
+			{Name: "sum", Label: "和", PortType: "connection"},
+		},
+	},
+}
 
-// 	// 文件操作节点类型
-// 	FileReadNode = model.NodeType{
-// 		ID:       2,
-// 		Category: "file",
-// 		Note:     "文件读取节点",
-// 		Operation: &FileReadOperation{
-// 			Encoding: "utf-8",
-// 		},
-// 		Properties: map[string][]model.Port{
-// 			"inputs": {
-// 				{Name: "file_path", Label: "文件路径", PortType: "file"},
-// 			},
-// 			"outputs": {
-// 				{Name: "content", Label: "文件内容", PortType: "connection"},
-// 			},
-// 		},
-// 	}
+// 乘法节点
+var MulNodeType = model.NodeType{
+	UID:       "builtin.mul.v1",
+	Category:  "math",
+	Note:      "两个数字相乘，输出结果",
+	Operation: MulOperationInst, // 这里你可以填入具体的乘法 Operation 实例
+	Properties: map[string][]model.Port{
+		"inputs": {
+			{Name: "a", Label: "乘数A", PortType: "connection"},
+			{Name: "b", Label: "乘数B", PortType: "connection"},
+		},
+		"outputs": {
+			{Name: "product", Label: "积", PortType: "connection"},
+		},
+	},
+}
 
-// 	FileWriteNode = model.NodeType{
-// 		ID:       3,
-// 		Category: "file",
-// 		Note:     "文件写入节点",
-// 		Operation: &FileWriteOperation{
-// 			Encoding: "utf-8",
-// 		},
-// 		Properties: map[string][]model.Port{
-// 			"inputs": {
-// 				{Name: "content", Label: "文件内容", PortType: "connection"},
-// 				{Name: "file_path", Label: "文件路径", PortType: "file"},
-// 			},
-// 			"outputs": {
-// 				{Name: "success", Label: "写入结果", PortType: "connection"},
-// 			},
-// 		},
-// 	}
+// 回显节点
+var EchoNodeType = model.NodeType{
+	UID:       "builtin.echo.v1",
+	Category:  "util",
+	Note:      "回显输入内容，常用于调试或展示节点计算结果",
+	Operation: EchoOperationInst, // 这里你可以填入具体的 Echo Operation 实例
+	Properties: map[string][]model.Port{
+		"inputs": {
+			{Name: "input", Label: "输入内容", PortType: "connection"},
+		},
+		"outputs": {
+			{Name: "output", Label: "输出内容", PortType: "connection"},
+		},
+	},
+}
 
-// 	// 数据转换节点类型
-// 	TransformNode = model.NodeType{
-// 		ID:       4,
-// 		Category: "transform",
-// 		Note:     "数据转换节点",
-// 		Operation: &TransformOperation{
-// 			Template: "{{.input}}",
-// 		},
-// 		Properties: map[string][]model.Port{
-// 			"inputs": {
-// 				{Name: "in", Label: "输入数据", PortType: "connection"},
-// 			},
-// 			"outputs": {
-// 				{Name: "out", Label: "转换结果", PortType: "connection"},
-// 			},
-// 		},
-// 	}
-// )
-
-// // GetDefaultNodeTypes 返回所有默认的节点类型
-// func GetDefaultNodeTypes() map[int]model.NodeType {
-// 	return map[int]model.NodeType{
-// 		EchoNode.ID:      EchoNode,
-// 		FileReadNode.ID:  FileReadNode,
-// 		FileWriteNode.ID: FileWriteNode,
-// 		TransformNode.ID: TransformNode,
-// 	}
-// }
+func GetDefaultNodeTypes() map[string]model.NodeType {
+	return map[string]model.NodeType{
+		AddNodeType.UID:  AddNodeType,
+		MulNodeType.UID:  MulNodeType,
+		EchoNodeType.UID: EchoNodeType,
+	}
+}

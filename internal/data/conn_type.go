@@ -44,9 +44,9 @@ var (
 // GetDefaultConnectionTypes 返回所有默认的连接类型
 func GetDefaultConnectionTypes() map[string]model.ConnectionType {
 	return map[string]model.ConnectionType{
-		DataFlowConn.UID:    DataFlowConn,
-		FileFlowConn.UID:    FileFlowConn,
-		ErrorFlowConn.UID:   ErrorFlowConn,
-		ControlFlowConn.UID: ControlFlowConn,
+		DataFlowConn.UID: DataFlowConn,
+		// FileFlowConn.UID:    FileFlowConn,
+		// ErrorFlowConn.UID:   ErrorFlowConn,
+		// ControlFlowConn.UID: ControlFlowConn,
 	}
 }

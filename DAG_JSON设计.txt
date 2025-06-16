@@ -1,0 +1,93 @@
+{
+  "node_types": [
+    {
+      "node_type": 1,
+      "category": "group",
+      "note": "节点组(1进1出)",
+      "properties": {
+        "inputs": [
+          { "port_type": "connection", "name": "in", "label": "输入" }
+        ],
+        "outputs": [
+          { "port_type": "connection", "name": "out", "label": "输出" }
+        ]
+      }
+    },
+    {
+      "node_type": 2,
+      "category": "group",
+      "note": "节点组(1进3出)",
+      "properties": {
+        "inputs": [
+          { "port_type": "connection", "name": "in", "label": "输入" }
+        ],
+        "outputs": [
+          { "port_type": "connection", "name": "out1", "label": "输出1" },
+          { "port_type": "connection", "name": "out2", "label": "输出2" },
+          { "port_type": "connection", "name": "out3", "label": "输出3" }
+        ]
+      }
+    },
+    {
+      "node_type": 3,
+      "category": "io",
+      "note": "PDF文件输入",
+      "properties": {
+        "inputs": [],
+        "outputs": [
+          { "port_type": "file", "name": "pdf_out", "label": "PDF输出" }
+        ]
+      }
+    }
+  ],
+
+  "connection_types": [
+    {
+      "connection_type": 1,
+      "name": "data",
+      "description": "数据流连接线",
+      "color": "#00FF00",
+      "allowed_port_types": ["connection", "file"]
+    },
+    {
+      "connection_type": 2,
+      "name": "control",
+      "description": "控制流连接线",
+      "color": "#FF0000",
+      "allowed_port_types": ["connection"]
+    }
+  ],
+
+  "nodes": [
+    {
+      "id": "node1",
+      "node_type": 1,
+      "label": "节点组A"
+    },
+    {
+      "id": "node2",
+      "node_type": 2,
+      "label": "节点组B"
+    },
+    {
+      "id": "node3",
+      "node_type": 3,
+      "label": "PDF输入节点"
+    }
+  ],
+
+  "connections": [
+    {
+      "connection_id": "c1",
+      "connection_type": 1,
+      "from": { "node_id": "node1", "port_name": "out" },
+      "to": { "node_id": "node2", "port_name": "in" }
+    },
+    {
+      "connection_id": "c2",
+      "connection_type": 1,
+      "from": { "node_id": "node3", "port_name": "pdf_out" },
+      "to": { "node_id": "node1", "port_name": "in" }
+    }
+  ]
+}
