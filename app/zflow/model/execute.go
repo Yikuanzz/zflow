@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+
+	"google.golang.org/grpc"
 )
 
 // Operation 与 Node 一一对应，真正执行工作。
@@ -147,4 +149,30 @@ func (wf *Workflow) CollectWorkflowResults() map[string]interface{} {
 	}
 
 	return result
+}
+
+// ExecutionGRPCContext 实现 Context 接口，提供完整的执行上下文
+type ExecutionGRPCContext struct {
+	Workflow *Workflow
+	Logger   func(msg string)
+	Vars     map[string]interface{}
+	client   *grpc.ClientConn
+}
+
+// Log 实现 Context 接口
+func (ctx *ExecutionGRPCContext) Log(msg string) {
+	if ctx.Logger != nil {
+		ctx.Logger(msg)
+	}
+}
+
+// ExecuteWorkflowWithGRPC 执行整个工作流
+func (wf *Workflow) ExecuteWorkflowWithGRPC(ctx *ExecutionGRPCContext) error {
+	// 1. 获取拓扑排序
+	// order, err := wf.TopologicalSort()
+	// if err != nil {
+	// 	return fmt.Errorf("failed to sort workflow: %v", err)
+	// }
+
+	return nil
 }

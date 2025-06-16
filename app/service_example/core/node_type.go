@@ -1,10 +1,20 @@
 package core
 
-import "zflow/app/zflow/model"
+import (
+	"fmt"
+	"zflow/app/zflow/model"
+)
+
+// NoteTypeList 节点类型列表
+var NoteTypeList = []model.NodeType{
+	AddNodeType,
+	MulNodeType,
+	EchoNodeType,
+}
 
 // 加法节点
 var AddNodeType = model.NodeType{
-	UID:       "builtin.add.v1",
+	UID:       fmt.Sprintf("%s.add.v1", ServiceName),
 	Category:  "math",
 	Note:      "两个数字相加，输出结果",
 	Operation: AddOperationInst, // 这里你可以填入具体的加法 Operation 实例
@@ -21,7 +31,7 @@ var AddNodeType = model.NodeType{
 
 // 乘法节点
 var MulNodeType = model.NodeType{
-	UID:       "builtin.mul.v1",
+	UID:       fmt.Sprintf("%s.mul.v1", ServiceName),
 	Category:  "math",
 	Note:      "两个数字相乘，输出结果",
 	Operation: MulOperationInst, // 这里你可以填入具体的乘法 Operation 实例
@@ -38,7 +48,7 @@ var MulNodeType = model.NodeType{
 
 // 回显节点
 var EchoNodeType = model.NodeType{
-	UID:       "builtin.echo.v1",
+	UID:       fmt.Sprintf("%s.echo.v1", ServiceName),
 	Category:  "util",
 	Note:      "回显输入内容，常用于调试或展示节点计算结果",
 	Operation: EchoOperationInst, // 这里你可以填入具体的 Echo Operation 实例

@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package base;
+
+option go_package = "api/base;base";
+
+// 节点类型服务
+service BaseService {
+  // 获取所有可用的节点类型
+  rpc GetNodeTypes(GetNodeTypesRequest) returns (GetNodeTypesResponse) {}
+  // 获取所有可用的连接类型
+  rpc GetConnTypes(GetConnTypesRequest) returns (GetConnTypesResponse) {}
+  // 运行指定节点
+  rpc RunNode(RunNodeRequest) returns (RunNodeResponse) {}
+}
+
+// 端口定义
+message Port {
+  string name = 1;      // 端口名称，如 in/out1/pdf_out
+  string label = 2;     // 人类可读的标签
+  string port_type = 3; // 端口类型，如 connection/file
+}
+
+// 端点定义
+message Endpoint {
+  string node_id = 1;    // 节点ID
+  string port_name = 2;  // 端口名称
+}
+
+// 节点类型定义
+message NodeType {
+  string uid = 1;                    // 节点类型唯一标识
+  string category = 2;               // 节点分类
+  string note = 3;                   // 节点说明
+  map<string, PortList> properties = 4; // 属性映射，如 inputs/outputs
+}
+
+// 端口列表
+message PortList {
+  repeated Port ports = 1;
+}
+
+// 连接类型定义
+message ConnectionType {
+  string uid = 1;                // 连接类型唯一标识
+  string name = 2;              // 连接类型名称
+  string description = 3;       // 连接类型描述
+  string color = 4;             // 连接类型颜色
+  repeated string allowed_port_types = 5; // 允许的端口类型列表
+}
+
+// GetNodeTypes 请求
+message GetNodeTypesRequest {}
+
+// GetNodeTypes 响应
+message GetNodeTypesResponse {
+  repeated NodeType node_types = 1;
+}
+
+// GetConnTypes 请求
+message GetConnTypesRequest {}
+
+// GetConnTypes 响应
+message GetConnTypesResponse {
+  repeated ConnectionType connection_types = 1;
+}
+
+// RunNode 请求
+message RunNodeRequest {
+  string node_id = 1;           // 要运行的节点ID
+  map<string, bytes> inputs = 2; // 节点输入数据
+  map<string, string> vars = 3;  // 变量映射
+}
+
+// RunNode 响应
+message RunNodeResponse {
+  map<string, bytes> outputs = 1; // 节点输出数据
+  string state = 2;              // 节点执行状态
+  string error = 3;              // 错误信息（如果有）
+}

@@ -13,9 +13,33 @@ tasks:
       - task --list
 
   proto-registry:
-    desc: 生成 protobuf 文件
+    desc: 生成 registry protobuf 文件
     cmds:
       - protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative api/registry/registry.proto
+    silent: true
+
+  proto-base:
+    desc: 生成 base protobuf 文件
+    cmds:
+      - protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative api/base/base.proto
+    silent: true
+
+  run-registry:
+    desc: 运行 registry 服务
+    cmds:
+      - go run app/registry/cmd/main.go
+    silent: true
+  
+  run-s_example:
+    desc: 运行 s_example 服务
+    cmds:
+      - go run app/s_example/cmd/main.go
+    silent: true
+
+  run-service_a:
+    desc: 运行 service_a 服务
+    cmds:
+      - go run app/service_a/cmd/main.go
     silent: true
 
   run-zflow:
