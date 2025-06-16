@@ -146,7 +146,11 @@
 
 
 
-接着调用 **POST /run/work_flow** 传递搭建好的工作流
+接着调用 **POST /work_flow** 传递搭建好的工作流，就可以运行返回结果。
+
+
+
+
 
 
 
@@ -205,12 +209,19 @@ type ConnectionType struct {
     {
       "id": "add1",
       "node_type": "builtin.add.v1",
-      "label": "加法节点"
+      "label": "加法节点",
+      "inputs": {
+        "a": "MTAg",
+        "b": "MjAg"
+      }
     },
     {
       "id": "mul1",
       "node_type": "builtin.mul.v1",
-      "label": "乘法节点"
+      "label": "乘法节点",
+      "inputs": {
+        "b": "MjAg"
+      }
     },
     {
       "id": "echo1",

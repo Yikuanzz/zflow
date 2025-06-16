@@ -45,7 +45,6 @@ func (op *TransformOperation) Execute(ctx model.Context, input []byte, vars map[
 	return nil, nil
 }
 
-// ... existing code ...
 // AddOperation 实现
 // 加法操作，输入 a、b，输出 sum
 type AddOperation struct{}
@@ -109,5 +108,3 @@ func (op *EchoOperationV2) Execute(ctx model.Context, inputs map[string][]byte, 
 }
 
 var EchoOperationInst = &EchoOperationV2{}
-
-// ... existing code ...

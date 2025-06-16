@@ -109,14 +109,42 @@ func (wf *Workflow) collectNodeInputs(nodeID string) error {
 	return nil
 }
 
-// EchoOperation 是一个简单的回显操作，用于测试
-// type EchoOperation struct {
-// 	Message string
-// }
+// CollectWorkflowResults 收集工作流执行结果
+func (wf *Workflow) CollectWorkflowResults() map[string]interface{} {
+	result := map[string]interface{}{
+		"workflow_id": wf.ID,
+		"status":      "success",
+		"nodes":       make(map[string]map[string]interface{}),
+	}
 
-// func (op *EchoOperation) Execute(ctx Context, inputs map[string][]byte, vars map[string]interface{}) (map[string][]byte, error) {
-// 	ctx.Log(fmt.Sprintf("Echo: %s", op.Message))
-// 	return map[string][]byte{
-// 		"out": []byte(op.Message),
-// 	}, nil
-// }
+	// 遍历所有节点，收集执行结果
+	for nodeID, node := range wf.Dag.Nodes {
+		nodeResult := map[string]interface{}{
+			"id":    nodeID,
+			"label": node.Label,
+			"state": node.State,
+		}
+
+		// 收集输入数据
+		if len(node.Inputs) > 0 {
+			inputs := make(map[string]string)
+			for port, data := range node.Inputs {
+				inputs[port] = string(data)
+			}
+			nodeResult["inputs"] = inputs
+		}
+
+		// 收集输出数据
+		if len(node.Outputs) > 0 {
+			outputs := make(map[string]string)
+			for port, data := range node.Outputs {
+				outputs[port] = string(data)
+			}
+			nodeResult["outputs"] = outputs
+		}
+
+		result["nodes"].(map[string]map[string]interface{})[nodeID] = nodeResult
+	}
+
+	return result
+}

@@ -127,14 +127,14 @@ func main() {
 		ID: "test_workflow",
 		Dag: &model.Dag{
 			Nodes: map[string]*model.Node{
-				"node1": model.NewNode("node1", 1, "MySQL检查节点"),
-				"node2": model.NewNode("node2", 2, "成功回显节点"),
-				"node3": model.NewNode("node3", 2, "失败回显节点"),
+				"node1": model.NewNode("node1", "1", "MySQL检查节点"),
+				"node2": model.NewNode("node2", "2", "成功回显节点"),
+				"node3": model.NewNode("node3", "2", "失败回显节点"),
 			},
 			Connections: []model.Connection{
 				{
 					ID:     "conn1",
-					TypeID: 1,
+					TypeID: "1",
 					From: model.Endpoint{
 						NodeID:   "node1",
 						PortName: "message",
@@ -146,7 +146,7 @@ func main() {
 				},
 				{
 					ID:     "conn2",
-					TypeID: 1,
+					TypeID: "1",
 					From: model.Endpoint{
 						NodeID:   "node1",
 						PortName: "error",
@@ -158,12 +158,12 @@ func main() {
 				},
 			},
 		},
-		NodeTypes: map[int]model.NodeType{
-			1: nodeType_MySQL,
-			2: nodeType_Echo,
+		NodeTypes: map[string]model.NodeType{
+			"1": nodeType_MySQL,
+			"2": nodeType_Echo,
 		},
-		ConnectionTypes: map[int]model.ConnectionType{
-			1: connType,
+		ConnectionTypes: map[string]model.ConnectionType{
+			"1": connType,
 		},
 	}
 
