@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"zflow/internal/server"
+	"zflow/app/zflow/server"
 )
 
 func main() {

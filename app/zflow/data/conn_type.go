@@ -1,6 +1,6 @@
 package data
 
-import "zflow/internal/model"
+import "zflow/app/zflow/model"
 
 // 定义常用的连接类型
 var (

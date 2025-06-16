@@ -2,7 +2,7 @@ package data
 
 import (
 	"fmt"
-	"zflow/internal/model"
+	"zflow/app/zflow/model"
 )
 
 // EchoOperation 是一个简单的回显操作，用于测试

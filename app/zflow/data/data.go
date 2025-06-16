@@ -2,7 +2,7 @@ package data
 
 import (
 	"fmt"
-	"zflow/internal/model"
+	"zflow/app/zflow/model"
 )
 
 // InjectOperations 验证并注入 NodeType 和 ConnectionType 的操作

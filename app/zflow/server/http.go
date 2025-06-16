@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"zflow/internal/data"
-	"zflow/internal/model"
+	"zflow/app/zflow/data"
+	"zflow/app/zflow/model"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,10 +14,20 @@ func NewServer() *http.Server {
 	router := gin.Default()
 
 	router.GET("/node_types", func(c *gin.Context) {
+		// TODO: 从注册中心获取服务地址
+
+		// TODO: 根据服务地址获取所有的节点类型
+
+		// TODO: 返回所有的节点类型与本地节点类型合并
 		c.JSON(http.StatusOK, data.GetDefaultNodeTypes())
 	})
 
 	router.GET("/connection_types", func(c *gin.Context) {
+		// TODO: 从注册中心获取服务地址
+
+		// TODO: 根据服务地址获取所有的连接类型
+
+		// TODO: 返回所有的连接类型与本地连接类型合并
 		c.JSON(http.StatusOK, data.GetDefaultConnectionTypes())
 	})
 

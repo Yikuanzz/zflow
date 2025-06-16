@@ -4,7 +4,7 @@ version: '3'
 
 vars:
   BINARY_NAME: zflow
-  MAIN_PATH: ./cmd/main.go
+  MAIN_PATH: ./app/zflow/cmd/main.go
 
 tasks:
   default:
@@ -12,27 +12,17 @@ tasks:
     cmds:
       - task --list
 
-  run:
+  proto-registry:
+    desc: 生成 protobuf 文件
+    cmds:
+      - protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative api/registry/registry.proto
+    silent: true
+
+  run-zflow:
     desc: 运行应用程序
     cmds:
       - go run {{.MAIN_PATH}}
     silent: true
 
-  build:
-    desc: 构建应用程序
-    cmds:
-      - go build -o bin/{{.BINARY_NAME}} {{.MAIN_PATH}}
-    silent: true
-
-  clean:
-    desc: 清理构建产物
-    cmds:
-      - rm -rf bin/
-    silent: true
-
-  dev:
-    desc: 开发模式运行（使用 air 热重载）
-    cmds:
-      - air -c .air.toml
-    silent: true
+  
 

@@ -16,18 +16,6 @@ type Node struct {
 	Outputs map[string][]byte `json:"-"` // 端口名 -> 输出数据
 }
 
-// NewNode 创建一个新的节点实例
-func NewNode(id string, typeID string, label string) *Node {
-	return &Node{
-		ID:      id,
-		TypeID:  typeID,
-		Label:   label,
-		State:   "pending",
-		Inputs:  make(map[string][]byte),
-		Outputs: make(map[string][]byte),
-	}
-}
-
 // Connection 表示有向边
 type Connection struct {
 	ID     string   `json:"connection_id"`

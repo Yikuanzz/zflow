@@ -1,0 +1,41 @@
+syntax = "proto3";
+package registry;
+
+option go_package = "zflow/api/registry";
+
+import "google/protobuf/empty.proto";
+
+service Registry {
+  // 服务注册，返回 LeaseID 供后续心跳续期
+  rpc Register(ServiceInstance) returns (Lease) {}
+  // 心跳续期；若返回 NOT_FOUND 需重新 Register
+  rpc KeepAlive(Lease) returns (Lease) {}
+  // 主动注销
+  rpc Deregister(Lease) returns (google.protobuf.Empty) {}
+  // 一次性拉取
+  rpc Discover(Query) returns (Services) {}
+  // 长连接订阅；服务器发现变化即推送
+  rpc Watch(Query) returns (stream Services) {}
+}
+
+message ServiceInstance {
+  string name = 1;         // 服务名
+  string id   = 2;         // 实例唯一 ID（IP:Port 或 UUID）
+  string addr = 3;         // 访问地址
+  map<string,string> meta = 4;
+  int32 ttl_sec = 5;       // 首次租约 TTL
+}
+
+message Lease {
+  string name = 1;
+  string id   = 2;
+  int64  expire_unix = 3;
+}
+
+message Query {
+  string name = 1;         // 为空则返回全部
+}
+
+message Services {
+  repeated ServiceInstance instances = 1;
+}

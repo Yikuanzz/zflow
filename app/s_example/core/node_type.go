@@ -1,6 +1,6 @@
-package data
+package core
 
-import "zflow/internal/model"
+import "zflow/app/zflow/model"
 
 // 加法节点
 var AddNodeType = model.NodeType{
@@ -50,12 +50,4 @@ var EchoNodeType = model.NodeType{
 			{Name: "output", Label: "输出内容", PortType: "connection"},
 		},
 	},
-}
-
-func GetDefaultNodeTypes() map[string]model.NodeType {
-	return map[string]model.NodeType{
-		AddNodeType.UID:  AddNodeType,
-		MulNodeType.UID:  MulNodeType,
-		EchoNodeType.UID: EchoNodeType,
-	}
 }
