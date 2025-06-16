@@ -1,6 +1,6 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
 vars:
   BINARY_NAME: zflow
@@ -29,17 +29,11 @@ tasks:
     cmds:
       - go run app/registry/cmd/main.go
     silent: true
-  
-  run-s_example:
-    desc: 运行 s_example 服务
-    cmds:
-      - go run app/s_example/cmd/main.go
-    silent: true
 
-  run-service_a:
-    desc: 运行 service_a 服务
+  run-example:
+    desc: 运行 example 服务
     cmds:
-      - go run app/service_a/cmd/main.go
+      - go run app/service_example/main.go
     silent: true
 
   run-zflow:
@@ -47,6 +41,3 @@ tasks:
     cmds:
       - go run {{.MAIN_PATH}}
     silent: true
-
-  
-

@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+
 	"zflow/app/zflow/model"
 )
 
@@ -55,16 +56,15 @@ func (op *MulOperation) Execute(ctx model.Context, inputs map[string][]byte, var
 
 var MulOperationInst = &MulOperation{}
 
-// EchoOperation 实现
-// 输出输入
+// EchoOperation 实现（新版，支持 input->output）
 type EchoOperation struct{}
 
 func (op *EchoOperation) Execute(ctx model.Context, inputs map[string][]byte, vars map[string]interface{}) (map[string][]byte, error) {
 	input, ok := inputs["input"]
 	if !ok {
-		return nil, fmt.Errorf("回显节点缺少 input 输入")
+		return nil, fmt.Errorf("Echo 节点缺少 input 输入")
 	}
-	ctx.Log(fmt.Sprintf("回显节点: %s", string(input)))
+	ctx.Log(fmt.Sprintf("Echo: %s", string(input)))
 	return map[string][]byte{"output": input}, nil
 }
 

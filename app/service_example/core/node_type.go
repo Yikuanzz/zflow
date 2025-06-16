@@ -2,19 +2,27 @@ package core
 
 import (
 	"fmt"
+
 	"zflow/app/zflow/model"
 )
 
-// NoteTypeList 节点类型列表
-var NoteTypeList = []model.NodeType{
-	AddNodeType,
-	MulNodeType,
-	EchoNodeType,
+// 节点UID
+var (
+	AddNodeTypeUID  = "add"
+	MulNodeTypeUID  = "mul"
+	EchoNodeTypeUID = "echo"
+)
+
+// NodeTypes 定义节点类型
+var NodeTypes = map[string]*model.NodeType{
+	"add":  &AddNodeType,
+	"mul":  &MulNodeType,
+	"echo": &EchoNodeType,
 }
 
-// 加法节点
+// AddNodeType 加法节点
 var AddNodeType = model.NodeType{
-	UID:       fmt.Sprintf("%s.add.v1", ServiceName),
+	UID:       fmt.Sprintf("%s.add", ServiceName),
 	Category:  "math",
 	Note:      "两个数字相加，输出结果",
 	Operation: AddOperationInst, // 这里你可以填入具体的加法 Operation 实例
@@ -29,9 +37,9 @@ var AddNodeType = model.NodeType{
 	},
 }
 
-// 乘法节点
+// MulNodeType 乘法节点
 var MulNodeType = model.NodeType{
-	UID:       fmt.Sprintf("%s.mul.v1", ServiceName),
+	UID:       fmt.Sprintf("%s.mul", ServiceName),
 	Category:  "math",
 	Note:      "两个数字相乘，输出结果",
 	Operation: MulOperationInst, // 这里你可以填入具体的乘法 Operation 实例
@@ -46,9 +54,9 @@ var MulNodeType = model.NodeType{
 	},
 }
 
-// 回显节点
+// EchoNodeType 回显节点
 var EchoNodeType = model.NodeType{
-	UID:       fmt.Sprintf("%s.echo.v1", ServiceName),
+	UID:       fmt.Sprintf("%s.echo", ServiceName),
 	Category:  "util",
 	Note:      "回显输入内容，常用于调试或展示节点计算结果",
 	Operation: EchoOperationInst, // 这里你可以填入具体的 Echo Operation 实例

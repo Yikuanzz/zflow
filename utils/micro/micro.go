@@ -1,4 +1,4 @@
-package thing
+package micro
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
 	"zflow/api/registry"
-	"zflow/app/service_example/core"
 	"zflow/app/zflow/model"
 	"zflow/utils/service"
 
@@ -22,13 +22,15 @@ import (
 
 // Micro 微服务
 type Micro struct {
-	baseService     *service.BaseService
-	serviceInstance *registry.ServiceInstance
-	registryClient  registry.RegistryClient
+	registryServiceAddr string
+	baseService         *service.BaseService
+	serviceInstance     *registry.ServiceInstance
+	registryClient      registry.RegistryClient
+	grpcConn            *grpc.ClientConn
 }
 
 // NewMicro 创建微服务
-func NewMicro(serviceName string, serviceAddr string, nodeTypes map[string]*model.NodeType, connTypes map[string]*model.ConnectionType) *Micro {
+func NewMicro(registryServiceAddr, serviceName, serviceAddr string, nodeTypes map[string]*model.NodeType, connTypes map[string]*model.ConnectionType) *Micro {
 	// 创建基础服务
 	baseService := &service.BaseService{
 		Name:      serviceName,
@@ -38,7 +40,8 @@ func NewMicro(serviceName string, serviceAddr string, nodeTypes map[string]*mode
 	}
 
 	return &Micro{
-		baseService: baseService,
+		registryServiceAddr: registryServiceAddr,
+		baseService:         baseService,
 	}
 }
 
@@ -76,6 +79,11 @@ func (m *Micro) Run() {
 		log.Printf("Error unregistering service: %v", err)
 	}
 
+	// 关闭 gRPC 连接
+	if m.grpcConn != nil {
+		m.grpcConn.Close()
+	}
+
 	// 优雅关闭 gRPC 服务器
 	s.GracefulStop()
 	log.Println("Server stopped")
@@ -83,38 +91,64 @@ func (m *Micro) Run() {
 
 // registerService 注册服务到注册中心
 func (m *Micro) registerService() {
-	conn, err := grpc.NewClient(string(core.RegistryServiceAddr), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("failed to connect to registry: %v", err)
-	}
-	defer conn.Close()
+	// 创建 gRPC 连接
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
+	conn, err := grpc.DialContext(ctx, m.registryServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Printf("failed to connect to registry: %v", err)
+		return
+	}
+	m.grpcConn = conn
 	m.registryClient = registry.NewRegistryClient(conn)
 
+	// 创建服务实例
 	m.serviceInstance = &registry.ServiceInstance{
-		Name: string(core.ServiceName),
+		Name: m.baseService.Name,
 		Id:   uuid.New().String(),
-		Addr: string(core.ServiceAddr),
+		Addr: m.baseService.Addr,
 		Meta: map[string]string{
-			"version": "v1.0.0", // 版本号
+			"version": "v1.0.0",
 		},
-		TtlSec: 10, // 10秒后过期
+		TtlSec: 10,
 	}
 
 	// 注册服务
 	lease, err := m.registryClient.Register(context.Background(), m.serviceInstance)
 	if err != nil {
-		log.Fatalf("注册失败: %v", err)
+		log.Printf("注册失败: %v", err)
+		return
 	}
 
 	// 心跳协程
-	tk := time.NewTicker(time.Second * 5)
-	for range tk.C {
-		if _, err := m.registryClient.KeepAlive(context.Background(), lease); err != nil {
-			log.Printf("keepalive failed: %v, re-registering...", err)
-			lease, _ = m.registryClient.Register(context.Background(), m.serviceInstance)
+	go func() {
+		tk := time.NewTicker(time.Second * 5)
+		defer tk.Stop()
+
+		for {
+			select {
+			case <-tk.C:
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				_, err := m.registryClient.KeepAlive(ctx, lease)
+				cancel()
+
+				if err != nil {
+					log.Printf("keepalive failed: %v, re-registering...", err)
+					// 重新注册
+					ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+					newLease, err := m.registryClient.Register(ctx, m.serviceInstance)
+					cancel()
+
+					if err != nil {
+						log.Printf("re-register failed: %v", err)
+						continue
+					}
+					lease = newLease
+				}
+			}
 		}
-	}
+	}()
 }
 
 // unregisterService 注销服务
@@ -123,14 +157,13 @@ func (m *Micro) unregisterService() error {
 		return nil
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	// 注销服务
-	_, err := m.registryClient.Deregister(context.Background(), &registry.Lease{
-		Name: string(core.ServiceName),
+	_, err := m.registryClient.Deregister(ctx, &registry.Lease{
+		Name: m.baseService.Name,
 		Id:   m.serviceInstance.Id,
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

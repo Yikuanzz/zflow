@@ -14,7 +14,7 @@ type ServiceInstance struct {
 
 // LocalLB 本地负载均衡器
 type LocalLB struct {
-	instances []*ServiceInstance
+	instances map[string][]*ServiceInstance
 	index     uint64 // 用于轮询
 	mu        sync.RWMutex
 }
@@ -22,52 +22,68 @@ type LocalLB struct {
 // NewLocalLB 创建本地负载均衡器
 func NewLocalLB() *LocalLB {
 	return &LocalLB{
-		instances: make([]*ServiceInstance, 0),
+		instances: make(map[string][]*ServiceInstance),
 		index:     0,
 	}
 }
 
 // GetNextInstance 获取下一个服务实例（轮询）
-func (lb *LocalLB) GetNextInstance() *ServiceInstance {
+func (lb *LocalLB) GetNextInstance(serviceName string) *ServiceInstance {
 	lb.mu.RLock()
 	defer lb.mu.RUnlock()
 
-	if len(lb.instances) == 0 {
+	instances := lb.instances[serviceName]
+	if len(instances) == 0 {
 		return nil
 	}
 
 	// 原子操作获取下一个索引
-	index := atomic.AddUint64(&lb.index, 1) % uint64(len(lb.instances))
-	return lb.instances[index]
+	index := atomic.AddUint64(&lb.index, 1) % uint64(len(instances))
+	return instances[index]
 }
 
 // GetInstanceCount 获取当前实例数量
-func (lb *LocalLB) GetInstanceCount() int {
+func (lb *LocalLB) GetInstanceCount(serviceName string) int {
 	lb.mu.RLock()
 	defer lb.mu.RUnlock()
-	return len(lb.instances)
+	return len(lb.instances[serviceName])
 }
 
 // GetAllInstances 获取所有实例
-func (lb *LocalLB) GetAllInstances() []*ServiceInstance {
+func (lb *LocalLB) GetAllInstances(serviceName string) []*ServiceInstance {
 	lb.mu.RLock()
 	defer lb.mu.RUnlock()
 
-	instances := make([]*ServiceInstance, len(lb.instances))
-	copy(instances, lb.instances)
-	return instances
+	instances := lb.instances[serviceName]
+	if len(instances) == 0 {
+		return nil
+	}
+
+	result := make([]*ServiceInstance, len(instances))
+	copy(result, instances)
+	return result
 }
 
 // SetInstances 设置实例
-func (lb *LocalLB) SetInstances(instances []*ServiceInstance) {
+func (lb *LocalLB) SetInstances(serviceName string, instances []*ServiceInstance) {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
-	lb.instances = instances
+
+	if instances == nil {
+		instances = make([]*ServiceInstance, 0)
+	}
+	lb.instances[serviceName] = instances
 }
 
 // AddInstance 添加实例
-func (lb *LocalLB) AddInstance(instance *ServiceInstance) {
+func (lb *LocalLB) AddInstance(serviceName string, instance *ServiceInstance) {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
-	lb.instances = append(lb.instances, instance)
+
+	if instance == nil {
+		return
+	}
+
+	instances := lb.instances[serviceName]
+	lb.instances[serviceName] = append(instances, instance)
 }

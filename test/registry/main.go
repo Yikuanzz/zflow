@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"time"
+
 	"zflow/api/registry"
 	registryCore "zflow/app/registry/core"
 
@@ -35,9 +36,9 @@ func main() {
 func testRegister(cli registry.RegistryClient) {
 	// 注册 s_example 服务
 	inst := &registry.ServiceInstance{
-		Name: string(registryCore.SERVICE_S_EXAMPLE),
+		Name: "service_zz",
 		Id:   "test-instance-1",
-		Addr: string(registryCore.SERVICE_S_EXAMPLE_ADDR),
+		Addr: "127.0.0.1:50051",
 		Meta: map[string]string{
 			"version": "v1.0.0",
 		},
@@ -67,7 +68,7 @@ func testRegister(cli registry.RegistryClient) {
 // testWatch 测试服务发现
 func testWatch(cli registry.RegistryClient) {
 	stream, err := cli.Watch(context.Background(), &registry.Query{
-		Name: string(registryCore.SERVICE_S_EXAMPLE),
+		Name: "service_zz",
 	})
 	if err != nil {
 		log.Fatalf("监听服务失败: %v", err)

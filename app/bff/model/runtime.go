@@ -58,7 +58,6 @@ type RawWorkflow struct {
 
 // NewWorkflow 从 JSON 配置创建新的工作流实例
 func NewWorkflow(uid string, raw RawWorkflow) (*Workflow, error) {
-
 	wf := &Workflow{
 		ID:              uid,
 		Dag:             &Dag{Nodes: make(map[string]*Node)},
@@ -179,6 +178,9 @@ func (wf *Workflow) Validate() error {
 	}
 
 	return nil
+}
+
+func (wf *Workflow) InjectOperations() {
 }
 
 // TopologicalSort 对 DAG 进行拓扑排序
